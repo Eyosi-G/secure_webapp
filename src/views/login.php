@@ -4,7 +4,6 @@ require_once(__ROOT__.'/db/connection.php');
 
 function handleLogin($username, $password){
     try{
-        if(class_exists('DbConnection')){
             $conn = new DbConnection();
             $db = $conn->openConnection();
             $sql = 'SELECT * FROM users WHERE username=?;';
@@ -29,9 +28,8 @@ function handleLogin($username, $password){
                 }
             }
             throw new Exception('wrong credentials');
-        }
-        throw new Exception('internal error');
     }catch(Exception $e){
+        $conn->closeConnection();
         header('location: '.$_SERVER['PHP_SELF']);
     }
 }
