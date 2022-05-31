@@ -34,8 +34,8 @@ function handleLogin($username, $password){
     }
 }
 
-$requestType = $_SERVER['REQUEST_METHOD'];
-if($requestType == "POST"){
+
+if($_SERVER['REQUEST_METHOD'] == "POST"){
     $username = $_POST["username"];
     $password = $_POST['password'];
     handleLogin($username, $password);
@@ -43,8 +43,9 @@ if($requestType == "POST"){
 ?>
 
 <html>
+    <script src="load_captha.js"></script>
     <h3>Login Form</h3>
-    <form action="<?php $_SERVER['PHP_SELF']?>" method="POST">
+    <form action="<?php htmlspecialchars($_SERVER['PHP_SELF'])?>" method="POST">
         <label>username</label><br/>
         <input type="text" name="username" /><br/><br/>
         <label>password</label><br/>

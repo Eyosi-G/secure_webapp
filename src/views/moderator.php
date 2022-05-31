@@ -27,6 +27,17 @@ function handleDisableAccount($userId, $isDisabled){
     $stmt->execute([$isDisabled, $userId]);
 }
 
+function fetchFeedbacks(){
+    $conn = new DbConnection();
+    $db = $conn->openConnection();
+    $sql = "SELECT * FROM feedbacks";
+    $stmt = $db->prepare($sql);
+    $stmt->execute([]);
+    $feedbacks = $stmt->fetchAll();
+    $conn->closeConnection();
+    return $feedbacks;
+}
+
 if($_SERVER["REQUEST_METHOD"] == "POST"){
     try {
         $isDisabled = $_POST['is_disabled'];
@@ -47,7 +58,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 <html>
     <div>
         <h3>members account</h3>
-        <?php try { $users = fetchAccounts();} catch(Exception $e) { echo "something went wrong"; } ?>
+        <?php try { $users = fetchAccounts();} catch(Exception $e) { echo "couldn't fetch users"; } ?>
         <?php if(isset($users) && count($users) == 0) :?>
             <div>empty users list</div>
         <?php endif ?>
@@ -61,7 +72,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <tr>
                         <td><?php echo $user["username"] ?></td>
                         <td>
-                            <form action='<?php $_SERVER["PHP_SELF"] ?>' method='POST'>
+                            <form action='<?php htmlspecialchars($_SERVER["PHP_SELF"]) ?>' method='POST'>
                                 <input type='hidden' name='user_id' value=<?php echo $user['user_id'] ?> />
                                 <input onChange='this.form.submit()' type='checkbox' name='is_disabled' value=<?php echo $user['is_disabled']?>  <?php echo($user["is_disabled"] ? "checked" : "") ?>  />
                             </form>
@@ -72,5 +83,28 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             </table>
         <?php endif ?>
         <h3>feedbacks</h3>
+        <?php try{ $feedbacks = fetchFeedbacks(); } catch(Exception $e) { echo "couldn't fetch feedbacks"; } ?>
+        <?php if(isset($feedbacks) && count($feedbacks) == 0) :?>
+            <div>no feedback yet</div>
+        <?php endif ?>
+        <?php if(count($feedbacks) > 0): ?>
+            <table border="1">
+            <tr>
+                <td>name</td>
+                <td>email</td>
+                <td>comments</td>
+                <td>attachement</td>
+            </tr>
+                <?php foreach($feedbacks as $feedback): ?>
+                    <tr>
+                        <td><?php echo $feedback["name"]; ?></td>
+                        <td><?php echo $feedback["email"]; ?></td>
+                        <td><?php echo $feedback["comment"]; ?></td>
+                        <td><?php echo $feedback["file_name"]; ?></td>
+                    </tr>
+                
+                <?php endforeach ?>
+            </table>
+        <?php endif ?>
     </div>
 </html>

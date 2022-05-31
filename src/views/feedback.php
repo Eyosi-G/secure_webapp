@@ -6,9 +6,9 @@ $role = $_SESSION['role'];
 if($role != "member"){
      return header("Location: login.php");
 }
+include(__ROOT__.'/utils/validate.php');
+
 include(__ROOT__.'/components/navbar.php');
-
-
 
 function submitFeedback($name, $email, $comment, $attachement){
     $userId = $_SESSION["id"];
@@ -35,17 +35,31 @@ function submitFeedback($name, $email, $comment, $attachement){
 }
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
-    $name = $_POST["name"];
-    $email = $_POST['email'];
-    $comment = $_POST['comment'];
-    $attachement = $_FILES['attachement']['name'];
-    $ext = explode(".", $attachement)[1];
-    $attachement = uniqid();
-    $attachement = "$attachement.$ext";
-    $file_tmp = $_FILES['attachement']['tmp_name'];
-    $result = move_uploaded_file($file_tmp, __DIR__."/../../public/uploads/".$attachement);
-    submitFeedback($name, $email, $comment, $result ? $attachement : $result);
+    try{
+        
+        if(!isset($_POST["token"]) || validate($_POST["token"]) != $_SESSION["token"]){
+            throw Exception("unauthorized access");
+        }
+        $name = validate($_POST["name"]);
+        $email = validate($_POST['email']);
+        $comment = validate($_POST['comment']);
+        $attachement = $_FILES['attachement']['name'];
+        $ext = explode(".", $attachement)[1];
+        $attachement = uniqid();
+        $attachement = "$attachement.$ext";
+        $file_tmp = $_FILES['attachement']['tmp_name'];
+        $result = move_uploaded_file($file_tmp, __DIR__."/../../public/uploads/".$attachement);
+        submitFeedback($name, $email, $comment, $result ? $attachement : $result);
+    }catch(Exception $e){
+        echo $e->getMessage();
+    }
 
+}
+
+if($_SERVER["REQUEST_METHOD"] == "GET"){
+    if (empty($_SESSION['token'])) {
+        $_SESSION['token'] = md5(uniqid(mt_rand(), true));
+    }
 }
 
 ?>
@@ -60,5 +74,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     <textarea type="text" cols="21px" rows="5px" name="comment"></textarea> <br/><br/>
     <label>attachement<label><br/>
     <input type="file"  name="attachement"/> <br/>
+    <input type="hidden" name="token" value="<?php echo $_SESSION['token'] ?? '' ?>">
     <button type="submit">submit</button>
 </form>
