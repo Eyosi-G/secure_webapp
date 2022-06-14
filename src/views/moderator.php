@@ -30,7 +30,7 @@ function handleDisableAccount($userId, $isDisabled){
 function fetchFeedbacks(){
     $conn = new DbConnection();
     $db = $conn->openConnection();
-    $sql = "SELECT * FROM feedbacks";
+    $sql = "SELECT * FROM feedbacks join users on feedbacks.user_id=users.user_id";
     $stmt = $db->prepare($sql);
     $stmt->execute([]);
     $feedbacks = $stmt->fetchAll();
@@ -90,14 +90,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         <?php if(count($feedbacks) > 0): ?>
             <table border="1">
             <tr>
-                <td>name</td>
+                <td>username</td>
                 <td>email</td>
                 <td>comments</td>
                 <td>attachement</td>
             </tr>
                 <?php foreach($feedbacks as $feedback): ?>
                     <tr>
-                        <td><?php echo $feedback["name"]; ?></td>
+                        <td><?php echo $feedback["username"]; ?></td>
                         <td><?php echo $feedback["email"]; ?></td>
                         <td><?php echo $feedback["comment"]; ?></td>
                         <td><?php echo $feedback["file_name"]; ?></td>

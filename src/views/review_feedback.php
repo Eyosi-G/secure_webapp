@@ -10,20 +10,20 @@ include(__ROOT__.'/components/navbar.php');
 
 
 
-function updateFeedback($feedbackId, $name, $email, $comment, $attachement){
+function updateFeedback($feedbackId, $comment, $attachement){
     $conn = new DbConnection();
     $db = $conn->openConnection();
     if($attachement == ""){
-        $sql = "UPDATE feedbacks SET name=?, email=?, comment=? WHERE feedback_id=?;";
+        $sql = "UPDATE feedbacks SET comment=? WHERE feedback_id=?;";
         $stmt = $db->prepare($sql);
-        $stmt->execute([$name, $email, $comment, $feedbackId]);
+        $stmt->execute([$comment, $feedbackId]);
         $row = $stmt->fetch();
         $conn->closeConnection();
         return $row;
     }else{
-        $sql = "UPDATE feedbacks SET name=?, email=?, comment=?, file_name=? WHERE feedback_id=?;";
+        $sql = "UPDATE feedbacks SET comment=?, file_name=? WHERE feedback_id=?;";
         $stmt = $db->prepare($sql);
-        $stmt->execute([$name, $email, $comment, $attachement, $feedbackId]);
+        $stmt->execute([$comment, $attachement, $feedbackId]);
         $row = $stmt->fetch();
         $conn->closeConnection();
         return $row;
@@ -76,11 +76,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             }else{
                 $attachement = $feedback["file_name"];
             }
-            
             $result = move_uploaded_file($file_tmp, __DIR__."/../../public/uploads/".$attachement);
-            updateFeedback($feedbackId, $name, $email, $comment, $attachement );
+            updateFeedback($feedbackId, $comment, $attachement );
         }else{
-            updateFeedback($feedbackId, $name, $email, $comment, "");
+            updateFeedback($feedbackId, $comment, "");
         }
         $feedbackId = $_GET["id"];
         $userId = $_SESSION["id"];
@@ -97,10 +96,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
 <h3>Edit Complaint Submiting Form !! </h3>
 <form action="<?php htmlspecialchars($_SERVER['PHP_SELF']) ?>" method="POST" enctype="multipart/form-data">
-    <label>name<label><br/>
-    <input type="text"  name="name" value=<?php  echo isset($feedback["name"]) ? $feedback["name"] : ""; ?> /> <br/><br/>
-    <label>email<label><br/>
-    <input type="text"  name="email" value=<?php echo isset($feedback["email"]) ? $feedback["email"] : ""; ?> /> <br/><br/>
     <label>comment<label><br/>
     <textarea type="text" cols="21px" rows="5px" name="comment"><?php echo isset($feedback["comment"]) ? $feedback["comment"] : ""; ?></textarea> <br/><br/>
     <label>attachement<label><br/>

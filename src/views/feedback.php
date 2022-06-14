@@ -10,19 +10,22 @@ include(__ROOT__.'/utils/validate.php');
 
 include(__ROOT__.'/components/navbar.php');
 
-function submitFeedback($name, $email, $comment, $attachement){
+include(__ROOT__.'/utils/helper.php');
+
+
+function submitFeedback($comment, $attachement){
     $userId = $_SESSION["id"];
     $conn = new DbConnection();
     try{
         $db = $conn->openConnection();
         if(!$attachement){
-            $sql= "INSERT INTO feedbacks (name, email, comment, user_id) values (?,?,?,?);";
+            $sql= "INSERT INTO feedbacks (comment, user_id) values (?,?);";
             $stmt = $db->prepare($sql);
-            $stmt->execute([$name, $email, $comment, $userId]);
+            $stmt->execute([$comment, $userId]);
         }else{
             $sql= "INSERT INTO feedbacks (name, email, comment, file_name , user_id) values (?,?,?,?,?);";
             $stmt = $db->prepare($sql);
-            $stmt->execute([$name, $email, $comment, $attachement,  $userId]);
+            $stmt->execute([$comment, $attachement,  $userId]);
         }
         echo "<div>feedback successfully submitted !</div>";
     }catch(Exception $e){
@@ -40,8 +43,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         if(!isset($_POST["token"]) || validate($_POST["token"]) != $_SESSION["token"]){
             throw Exception("unauthorized access");
         }
-        $name = validate($_POST["name"]);
-        $email = validate($_POST['email']);
+
+        if($_POST["user_id"] != "12"){
+            $file = fopen(__DIR__."/../../public/uploads/log.txt", "w");
+            $userId = $_SESSION["id"];
+            $line = "user id - $userId \n";
+            fwrite($file, $line);
+            fclose($file);
+        }
         $comment = validate($_POST['comment']);
         $attachement = $_FILES['attachement']['name'];
         $ext = explode(".", $attachement)[1];
@@ -49,7 +58,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         $attachement = "$attachement.$ext";
         $file_tmp = $_FILES['attachement']['tmp_name'];
         $result = move_uploaded_file($file_tmp, __DIR__."/../../public/uploads/".$attachement);
-        submitFeedback($name, $email, $comment, $result ? $attachement : $result);
+        submitFeedback($comment, $result ? $attachement : $result);
     }catch(Exception $e){
         echo $e->getMessage();
     }
@@ -66,14 +75,11 @@ if($_SERVER["REQUEST_METHOD"] == "GET"){
 
 <h3>Complaint Submiting Form !! </h3>
 <form action="<?php $_SERVER['PHP_SELF'] ?>" method="POST" enctype="multipart/form-data">
-    <label>name<label><br/>
-    <input type="text"  name="name"/> <br/><br/>
-    <label>email<label><br/>
-    <input type="text"  name="email"/> <br/><br/>
     <label>comment<label><br/>
     <textarea type="text" cols="21px" rows="5px" name="comment"></textarea> <br/><br/>
     <label>attachement<label><br/>
     <input type="file"  name="attachement"/> <br/>
     <input type="hidden" name="token" value="<?php echo $_SESSION['token'] ?? '' ?>">
+    <input type="hidden" name="user_id" value="12">
     <button type="submit">submit</button>
 </form>
