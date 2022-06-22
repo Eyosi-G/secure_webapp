@@ -2,6 +2,7 @@
 session_start();
 if($_SESSION["role"] != "moderator"){
     header("Location: login.php");
+    die();
 }
 define('__ROOT__', dirname(dirname(__FILE__)));
 require_once(__ROOT__.'/db/connection.php');
@@ -46,7 +47,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         handleDisableAccount($userId, $isDisabled);
     } catch (Throwable $th) {
         echo $th->getMessage();
-        echo "<div>couldn't disable user !</div>";
+        echo "<div class='error'>couldn't disable user !</div>";
     }
 }
 
@@ -56,9 +57,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
 
 <html>
+<head>
+    <link rel="stylesheet" href="../../public/styles/style.css"/>
+</head>
+<body>
     <div>
         <h3>members account</h3>
-        <?php try { $users = fetchAccounts();} catch(Exception $e) { echo "couldn't fetch users"; } ?>
+        <?php try { $users = fetchAccounts();} catch(Exception $e) { echo "<p class='error'>couldn't fetch users</p>"; } ?>
         <?php if(isset($users) && count($users) == 0) :?>
             <div>empty users list</div>
         <?php endif ?>
@@ -83,7 +88,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             </table>
         <?php endif ?>
         <h3>feedbacks</h3>
-        <?php try{ $feedbacks = fetchFeedbacks(); } catch(Exception $e) { echo "couldn't fetch feedbacks"; } ?>
+        <?php try{ $feedbacks = fetchFeedbacks(); } catch(Exception $e) { echo "<p class='error'>couldn't fetch feedbacks</p>"; } ?>
         <?php if(isset($feedbacks) && count($feedbacks) == 0) :?>
             <div>no feedback yet</div>
         <?php endif ?>
@@ -97,14 +102,15 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             </tr>
                 <?php foreach($feedbacks as $feedback): ?>
                     <tr>
-                        <td><?php echo $feedback["username"]; ?></td>
-                        <td><?php echo $feedback["email"]; ?></td>
-                        <td><?php echo $feedback["comment"]; ?></td>
-                        <td><?php echo $feedback["file_name"]; ?></td>
+                        <td><?php echo htmlspecialchars($feedback["username"]); ?></td>
+                        <td><?php echo htmlspecialchars($feedback["email"]); ?></td>
+                        <td><?php echo htmlspecialchars($feedback["comment"]); ?></td>
+                        <td><?php echo htmlspecialchars($feedback["file_name"]); ?></td>
                     </tr>
                 
                 <?php endforeach ?>
             </table>
         <?php endif ?>
     </div>
+</body>
 </html>

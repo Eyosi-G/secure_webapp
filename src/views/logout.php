@@ -3,5 +3,7 @@ session_start();
 unset($_SESSION["username"]);
 unset($_SESSION["id"]);
 unset($_SESSION["role"]);
+session_gc();
 header("Location:login.php");
+die();
 ?>

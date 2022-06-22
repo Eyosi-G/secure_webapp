@@ -17,21 +17,25 @@ function handleLogin($username, $password){
 
             if($row != null){
                 if($row["is_disabled"]){
-                    echo "<div>account is locked, can't login</div>";
+                    echo "<div class='error'>account is locked, can't login</div>";
                     return ;
                 }
                 $result = password_verify($password, $row['password']);
-                if($result){
-                    session_start();                
+                if($result){    
+                    session_start();  
                     $_SESSION['username'] = $row['username'];
                     $_SESSION['id'] = $row['user_id'];
                     $_SESSION['role'] = $row['role'];
                     $conn->closeConnection();
                     switch($row['role']){
                         case "member":
-                           return header('location: dashboard.php');
+                           header('location: dashboard.php');
+                           die();
+                           return;
                         case "moderator":
-                           return header('location: moderator.php');
+                           header('location: moderator.php');
+                           die();
+                           return;
                         }
                 }
             }
@@ -39,6 +43,7 @@ function handleLogin($username, $password){
     }catch(Exception $e){
         $conn->closeConnection();
         header('location: '.$_SERVER['PHP_SELF']);
+        die();
     }
 }
 
@@ -46,21 +51,23 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
     $username = $_POST["username"];
     $password = $_POST['password'];
     if ( isset($_POST['captcha']) && ($_POST['captcha']!="") ){
-    // Validation: Checking entered captcha code with the generated captcha code
-    if(strcasecmp($_SESSION['captcha'], $_POST['captcha']) != 0){
-    // Note: the captcha code is compared case insensitively.
-    // if you want case sensitive match, check above with strcmp()
-    echo "<p style='color:#FFFFFF; font-size:20px'>
-    <span style='background-color:#FF0000;'>Entered captcha code does not match! 
-    Kindly try again.</span></p>";
+        if(strcasecmp($_SESSION['captcha'], $_POST['captcha']) != 0){
+        echo "<p class='error'>Entered captcha code does not match! 
+        Kindly try again.</p>";
+        }else{
+            handleLogin($username, $password);
+        }
     }else{
-        handleLogin($username, $password);
+        
     }
-}
 }
 ?>
 
 <html>
+<head>
+    <link rel="stylesheet" href="../../public/styles/style.css"/>
+</head>
+<body>
     <h3>Login Form</h3>
     <form action="<?php htmlspecialchars($_SERVER['PHP_SELF'])?>" method="POST">
         <label>username</label><br/>
@@ -92,4 +99,5 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
             )+"?rand="+Math.random()*1000;
     }
     </script>
+</body>
 </html>

@@ -4,7 +4,9 @@ define('__ROOT__', dirname(dirname(__FILE__)));
 require_once(__ROOT__.'/db/connection.php');
 $role = $_SESSION['role'];
 if($role != "member"){
-     return header("Location: login.php");
+    header("Location: login.php");
+    die();
+    return;
 }
 include(__ROOT__.'/utils/validate.php');
 
@@ -23,14 +25,14 @@ function submitFeedback($comment, $attachement){
             $stmt = $db->prepare($sql);
             $stmt->execute([$comment, $userId]);
         }else{
-            $sql= "INSERT INTO feedbacks (name, email, comment, file_name , user_id) values (?,?,?,?,?);";
+            $sql= "INSERT INTO feedbacks (comment, file_name , user_id) values (?,?,?);";
             $stmt = $db->prepare($sql);
             $stmt->execute([$comment, $attachement,  $userId]);
         }
-        echo "<div>feedback successfully submitted !</div>";
+        echo "<div class='success'>feedback successfully submitted !</div>";
     }catch(Exception $e){
         echo $e->getMessage();
-        echo "<div>feedback submission failed !</div>";
+        echo "<div class='error'>feedback submission failed !</div>";
     }finally{
         $conn->closeConnection();
     }
@@ -57,8 +59,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         $attachement = uniqid();
         $attachement = "$attachement.$ext";
         $file_tmp = $_FILES['attachement']['tmp_name'];
-        $result = move_uploaded_file($file_tmp, __DIR__."/../../public/uploads/".$attachement);
-        submitFeedback($comment, $result ? $attachement : $result);
+        $fileValidationError = validateFile($file_tmp);
+        if(!$fileValidationError){
+            $result = move_uploaded_file($file_tmp, __DIR__."/../../public/uploads/".$attachement);
+            submitFeedback($comment, $result ? $attachement : $result);
+        }
     }catch(Exception $e){
         echo $e->getMessage();
     }
@@ -72,14 +77,20 @@ if($_SERVER["REQUEST_METHOD"] == "GET"){
 }
 
 ?>
-
-<h3>Complaint Submiting Form !! </h3>
-<form action="<?php $_SERVER['PHP_SELF'] ?>" method="POST" enctype="multipart/form-data">
-    <label>comment<label><br/>
-    <textarea type="text" cols="21px" rows="5px" name="comment"></textarea> <br/><br/>
-    <label>attachement<label><br/>
-    <input type="file"  name="attachement"/> <br/>
-    <input type="hidden" name="token" value="<?php echo $_SESSION['token'] ?? '' ?>">
-    <input type="hidden" name="user_id" value="12">
-    <button type="submit">submit</button>
-</form>
+<html>
+<head>
+    <link rel="stylesheet" href="../../public/styles/style.css"/>
+</head>
+<body>
+    <h3>Complaint Submiting Form !! </h3>
+    <form action="<?php $_SERVER['PHP_SELF'] ?>" method="POST" enctype="multipart/form-data">
+        <label>comment<label><br/>
+        <textarea type="text" cols="21px" rows="5px" name="comment"></textarea> <br/><br/>
+        <label>attachement<label><br/>
+        <input type="file"  name="attachement"/> <br/>
+        <?php echo "<p class='error'>$fileValidationError</p>";?>
+        <input type="hidden" name="token" value="<?php echo $_SESSION['token'] ?? '' ?>">
+        <input type="hidden" name="user_id" value="12">
+        <button type="submit">submit</button>
+    </form>
+</body>

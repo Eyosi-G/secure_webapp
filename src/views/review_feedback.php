@@ -2,6 +2,7 @@
 session_start();
 if($_SESSION["role"] != "member"){
     header("Location: login.php");
+    die();
 }
 define('__ROOT__', dirname(dirname(__FILE__)));
 require_once(__ROOT__.'/db/connection.php');
@@ -76,15 +77,19 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             }else{
                 $attachement = $feedback["file_name"];
             }
-            $result = move_uploaded_file($file_tmp, __DIR__."/../../public/uploads/".$attachement);
-            updateFeedback($feedbackId, $comment, $attachement );
+            $fileValidationError = validateFile($file_tmp);
+            if(!$fileValidationError){
+                $result = move_uploaded_file($file_tmp, __DIR__."/../../public/uploads/".$attachement);
+                updateFeedback($feedbackId, $comment, $attachement );
+            }
+
         }else{
             updateFeedback($feedbackId, $comment, "");
         }
         $feedbackId = $_GET["id"];
         $userId = $_SESSION["id"];
         $feedback = getFeedback($feedbackId, $userId);
-        echo "review edited succesfully !";
+        echo "<p class='success'>review edited succesfully !</p>";
 
     } catch (Exception $e) {
         echo $e->getMessage();
@@ -100,6 +105,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     <textarea type="text" cols="21px" rows="5px" name="comment"><?php echo isset($feedback["comment"]) ? $feedback["comment"] : ""; ?></textarea> <br/><br/>
     <label>attachement<label><br/>
     <input type="file"  name="attachement"/> <br/>
+    <?php echo "<p>$fileValidationError</p>"?>
     <input type="hidden" name="feedback_id" value=<?php echo isset($feedbackId) ? $feedbackId : "" ?> />
     <button type="submit">submit</button>
 </form>
