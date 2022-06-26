@@ -41,10 +41,15 @@ function validatePassword($password){
 }
 
 function validateFile($file){
+
     $mime_type = mime_content_type($file);
     $allowed_file_type = 'application/pdf';
     $fileUploadError = "";
     if ($allowed_file_type != $mime_type) {
+        $fileUploadError = "only pdf file is allowed";
+    }
+    $content = file_get_contents($file);
+    if(str_contains($content,"<php?")){
         $fileUploadError = "only pdf file is allowed";
     }
     return $fileUploadError;

@@ -45,11 +45,13 @@ function getFeedback(int $feedbackId, int $userId){
 if($_SERVER["REQUEST_METHOD"] == "GET"){
     try{
         $feedbackId = ($_GET["id"]);
-        echo validate($feedbackId);
         $userId = $_SESSION["id"];
         $feedback = getFeedback($feedbackId, $userId);
-        if($feedback == null){
+        if($feedback == null ){
             throw new Exception("unauthorized access denied");
+        }
+        if (empty($_SESSION['token'])) {
+            $_SESSION['token'] = md5(uniqid(mt_rand(), true));
         }
     }catch(Exception $e){
         echo $e->getMessage();
@@ -59,13 +61,16 @@ if($_SERVER["REQUEST_METHOD"] == "GET"){
 if($_SERVER["REQUEST_METHOD"] == "POST"){
     try {
         $userId = $_SESSION["id"];
+        if(!isset($_POST["token"]) || validate($_POST["token"]) != $_SESSION["token"]){
+            throw Exception("unauthorized access");
+        }
         $feedbackId = ($_POST["feedback_id"]);
         $name = validate($_POST["name"]);
         $email = validate($_POST['email']);
         $comment = validate($_POST['comment']);
         $attachement = $_FILES['attachement']['name'];
         $feedback = getFeedback($feedbackId, $userId);
-        if($feedback==null) throw new Exception("unauthorized access denied!");
+        if($feedback==null) throw new Exception("unauthorized access denied !");
         if(isset($attachement)){
             $ext = explode(".", $attachement)[1];
             $file_tmp = $_FILES['attachement']['tmp_name'];
@@ -106,6 +111,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     <label>attachement<label><br/>
     <input type="file"  name="attachement"/> <br/>
     <?php echo "<p>$fileValidationError</p>"?>
+    <input type="hidden" name="token" value="<?php echo $_SESSION['token'] ?? '' ?>">
     <input type="hidden" name="feedback_id" value=<?php echo isset($feedbackId) ? $feedbackId : "" ?> />
     <button type="submit">submit</button>
 </form>

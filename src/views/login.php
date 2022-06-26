@@ -42,8 +42,8 @@ function handleLogin($username, $password){
             throw new Exception('wrong credentials');
     }catch(Exception $e){
         $conn->closeConnection();
-        header('location: '.$_SERVER['PHP_SELF']);
-        die();
+        $message = $e->getMessage();
+        echo "<p class='error'> $message<p>";
     }
 }
 
